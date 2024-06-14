@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <p>hello world1</p>
+</body>
+<script>
+    utools.onPluginEnter(({ code, type, payload, option }) => {
+        console.log('用户进入插件应用', code, type, payload)
+        console.log(window.findProcessVersion())
+        var statusElement = document.getElementById('status');
+        var textElement = document.getElementById('text');
+        if (statusElement && textElement && type === 'regex' && payload) {
+            statusElement.innerText = '匹配到正则文本';
+            textElement.textContent = payload;
+        } else {
+            statusElement.innerText = '未匹配到正则文本';
+            textElement.textContent = '';
+        }
+    });
+</script>
+
+</html>
