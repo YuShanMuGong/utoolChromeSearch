@@ -1,65 +1,66 @@
-
 const pingyin = require('tiny-pinyin')
 
-const { ChromeBookmarks } = require('./datasource/ChromeBookmark')
-const { ChomeHistory } = require('./datasource/ChromeHistory')
-const fs = require("fs")
+const {ChromeBookmarks} = require('./datasource/ChromeBookmark')
+const {ChromeHistory} = require('./datasource/ChromeHistory')
 
-// function writeSomething() {
-//     let value = Math.floor(Math.random() * 100) + 1
-//     fs.writeFileSync("D:\\Codes\\utool_plugin\\analyze\\cache_file_2", value.toString(), "utf8")
-//     console.log(value.toString())
-// }
+let dataSources = []
+let lastInitTime = null
 
+/**
+ * 进入插件时候进行的初始化动作
+ * @param platform 平台类型
+ */
+async function enterInit(platform) {
+    // 如果dataSource之前没初始化过 或者 初始化已经超过3秒，则重新初始化
+    if (dataSources.length <= 0 || (lastInitTime != null && (Math.abs(new Date().getTime() - lastInitTime.getTime()) / 1000)) > 3) {
+        dataSources = []
+        dataSources.push(new ChromeBookmarks(platform))
+        lastInitTime = new Date()
+        // dataSources.push(new ChromeHistory(platform))
+        return Promise.all(dataSources.map(item => item.loadInfos()))
+    } else {
+        console.log("已经初始化，直接返回")
+    }
+}
+
+async function searchKeyword(searchWord) {
+    let resPromise = Promise.all(dataSources.flatMap(item => item.listItemInfos(searchWord)))
+    return (await resPromise).flat(Infinity)
+}
 
 window.exports = {
     "chrome": {
-        mode: "list",
-        args: {
+        mode: "list", args: {
             // 进入插件应用时调用（可选）
             enter: (action, callbackSetList) => {
                 try {
-                    let infos = new ChromeBookmarks(process.platform).listItemInfos()
-                    let histroysPromise = new ChomeHistory(process.platform).listItemInfos()
-                    histroysPromise.then((response) => {
-                        console.log('history length=' + (response).length)
-                        callbackSetList([
-                            {
-                                title: "请输入关键字",
-                                description: "请输入关键字"
-                            },
-                        ])
+                    enterInit(process.platform).then((_) => {
+                        searchKeyword('Java').then(innerRes => callbackSetList(innerRes))
+                        // console.log('history length=' + (response).length)
+                        //
+                        // callbackSetList([{
+                        //     title: "请输入关键字", description: "请输入关键字"
+                        // }])
                     })
                 } catch (error) {
-                    console.error("Error initializing database:", error);
+                    callbackSetList([{
+                        title: "初始化失败", description: "初始化失败，请重试"
+                    },])
                 }
                 // 如果进入插件应用就要显示列表数据
-            },
-            // 子输入框内容变化时被调用 可选 (未设置则无搜索)
+            }, // 子输入框内容变化时被调用 可选 (未设置则无搜索)
             search: (action, searchWord, callbackSetList) => {
-                var word;
-                if (pingyin.isSupported()) {
-                    word = pingyin.convertToPinyin(searchWord, ",", true)
-                }
-                // 获取一些数据
-                // 执行 callbackSetList 显示出来
-                callbackSetList([
-                    {
-                        title: "这是标题",
-                        description: "这是拼音:" + word,
-                        icon: "", // 图标
-                        url: "https://yuanliao.info",
-                    },
-                ])
-            },
-            // 用户选择列表中某个条目时被调用
+                searchKeyword(searchWord).then(innerRes => {
+                    console.log('innerRes=' + JSON.stringify(innerRes))
+                    callbackSetList(innerRes)
+                })
+            }, // 用户选择列表中某个条目时被调用
             select: (action, itemData, callbackSetList) => {
                 window.utools.hideMainWindow()
                 const url = itemData.url
                 require('electron').shell.openExternal(url)
                 window.utools.outPlugin()
-            },
-            // 子输入框为空时的占位符，默认为字符串"搜索"
+            }, // 子输入框为空时的占位符，默认为字符串"搜索"
             placeholder: "搜索",
         },
     },

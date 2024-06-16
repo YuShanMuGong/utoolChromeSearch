@@ -1,5 +1,4 @@
-
-const { ItemInfo } = require('../models')
+const {ItemInfo} = require('../models')
 const datasource = require('./datasource')
 const pinyin = require('tiny-pinyin')
 const path = require('path')
@@ -12,7 +11,7 @@ class ChromeBookmarks extends datasource.DataSource {
         this.platform = platform
     }
 
-    async listItemInfos() {
+    async loadInfos() {
         let chromeDataDir = ''
         const profiles = ['Default', 'Profile 3', 'Profile 2', 'Profile 1']
         if (this.platform === 'win32') {
@@ -25,7 +24,7 @@ class ChromeBookmarks extends datasource.DataSource {
         const profile = profiles.find(profile => fs.existsSync(path.join(chromeDataDir, profile, 'Bookmarks')))
         if (!profile) return []
         const bookmarkPath = path.join(chromeDataDir, profile, 'Bookmarks')
-        const bookmarksData = []
+        const newBookmarksData = []
         try {
             /**
              * todo 修改成异步的
@@ -35,13 +34,7 @@ class ChromeBookmarks extends datasource.DataSource {
                 if (!item || !Array.isArray(item.children)) return
                 item.children.forEach(c => {
                     if (c.type === 'url') {
-                        bookmarksData.push(new ItemInfo(
-                            c.name,
-                            c.url,
-                            c.name.toLowerCase(),
-                            'web,png',
-                            this.buildSearKeys(c)
-                        ))
+                        newBookmarksData.push(new ItemInfo(c.name, c.url, c.name.toLowerCase(), 'web,png', this.buildSearKeys(c)))
                     } else if (c.type === 'folder') {
                         getUrlData(c)
                     }
@@ -50,8 +43,9 @@ class ChromeBookmarks extends datasource.DataSource {
             getUrlData(data.roots.bookmark_bar)
             getUrlData(data.roots.other)
             getUrlData(data.roots.synced)
-        } catch (e) { }
-        return bookmarksData
+        } catch (e) {
+        }
+        this.cacheInfos = newBookmarksData
     }
 
     buildSearKeys(info) {
@@ -59,8 +53,8 @@ class ChromeBookmarks extends datasource.DataSource {
         if (info === null || !pinyin.isSupported()) {
             return searKeys;
         }
-        searKeys.push(pinyin.convertToPinyin(info.name)
-            .toLowerCase())
+        searKeys.push(info.name.toLowerCase())
+        searKeys.push(pinyin.convertToPinyin(info.name).toLowerCase())
         return searKeys
     }
 

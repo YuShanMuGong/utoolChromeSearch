@@ -8,15 +8,14 @@ const pinyin = require('tiny-pinyin')
 
 const QUERY_HISTORY_SQL = "select * from urls order by last_visit_time desc limit 5000"
 
-
-class ChomeHistory extends datasource.DataSource {
+class ChromeHistory extends datasource.DataSource {
 
     constructor(platform) {
         super()
         this.platform = platform
     }
 
-    async listItemInfos() {
+    async loadInfos() {
         let chromeDataDir = ''
         const profiles = ['Default', 'Profile 3', 'Profile 2', 'Profile 1']
         if (this.platform === 'win32') {
@@ -32,11 +31,11 @@ class ChomeHistory extends datasource.DataSource {
 
         fs.copyFileSync(historyDBPath, 'D:\\Codes\\utool_plugin\\cache\\History_Cache')
 
-        let histroyInfos = []
+        let newHistoryInfos = []
         try {
             let SQL = await initSqlJs();
-            let histroyDB = new SQL.Database(fs.readFileSync('D:\\Codes\\utool_plugin\\cache\\History_Cache'))
-            histroyDB.each(QUERY_HISTORY_SQL, (row) => {
+            let historyDB = new SQL.Database(fs.readFileSync('D:\\Codes\\utool_plugin\\cache\\History_Cache'))
+            historyDB.each(QUERY_HISTORY_SQL, (row) => {
                 histroyInfos.push(new ItemInfo(
                     row.title,
                     row.url,
@@ -47,7 +46,7 @@ class ChomeHistory extends datasource.DataSource {
         } catch (error) {
             console.error("Error initializing database:", error);
         }
-        return histroyInfos
+        this.cacheInfos = newHistoryInfos
     }
 
     buildSearKeys(row) {
@@ -63,5 +62,5 @@ class ChomeHistory extends datasource.DataSource {
 }
 
 module.exports = {
-    ChomeHistory: ChomeHistory
+    ChromeHistory: ChromeHistory
 }
