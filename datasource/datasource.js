@@ -7,6 +7,7 @@ class DataSource {
     }
 
     async listItemInfos(keyword) {
+        console.log("searchWord = " + keyword)
         if (this.cacheInfos == null) {
             await this.loadInfos()
         }

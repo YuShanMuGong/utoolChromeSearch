@@ -15,8 +15,8 @@ async function enterInit(platform) {
     if (dataSources.length <= 0 || (lastInitTime != null && (Math.abs(new Date().getTime() - lastInitTime.getTime()) / 1000)) > 3) {
         dataSources = []
         dataSources.push(new ChromeBookmarks(platform))
+        dataSources.push(new ChromeHistory(platform))
         lastInitTime = new Date()
-        // dataSources.push(new ChromeHistory(platform))
         return Promise.all(dataSources.map(item => item.loadInfos()))
     } else {
         console.log("已经初始化，直接返回")
