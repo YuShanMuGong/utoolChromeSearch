@@ -4,6 +4,8 @@ const pinyin = require('tiny-pinyin')
 const path = require('path')
 const fs = require('fs')
 
+const DEFAULT_ICON = "https://cdn.icon-icons.com/icons2/1674/PNG/512/bookmark_111017.png"
+
 class ChromeBookmarks extends datasource.DataSource {
 
     constructor(platform) {
@@ -34,7 +36,7 @@ class ChromeBookmarks extends datasource.DataSource {
                 if (!item || !Array.isArray(item.children)) return
                 item.children.forEach(c => {
                     if (c.type === 'url') {
-                        newBookmarksData.push(new ItemInfo(c.name, c.url, "【来自书签】" + c.name.toLowerCase(), 'web,png', this.buildSearKeys(c)))
+                        newBookmarksData.push(new ItemInfo(c.name, c.url, "【来自书签】" + c.name.toLowerCase(), DEFAULT_ICON, this.buildSearKeys(c)))
                     } else if (c.type === 'folder') {
                         getUrlData(c)
                     }
@@ -44,6 +46,7 @@ class ChromeBookmarks extends datasource.DataSource {
             getUrlData(data.roots.other)
             getUrlData(data.roots.synced)
         } catch (e) {
+            console.error("读取书签失败", e)
         }
         this.cacheInfos = newBookmarksData
     }

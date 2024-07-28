@@ -5,17 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0566ccc6-cf18-4f19-ae38-449af95bd01c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/utils/data_path.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/icon.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/datasource/ChromeBookmark.js" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/ChromeBookmark.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/datasource/ChromeHistory.js" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/ChromeHistory.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/datasource/datasource.js" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/datasource.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/logo.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/preload.js" beforeDir="false" afterPath="$PROJECT_DIR$/preload.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/bookmark.js" beforeDir="false" afterPath="$PROJECT_DIR$/utils/bookmark.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -73,7 +82,7 @@
       <workItem from="1718718867498" duration="1201000" />
       <workItem from="1722060392059" duration="1125000" />
       <workItem from="1722091128672" duration="8280000" />
-      <workItem from="1722133480873" duration="955000" />
+      <workItem from="1722133480873" duration="8671000" />
     </task>
     <servers />
   </component>

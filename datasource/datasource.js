@@ -5,6 +5,9 @@ const pinyin = require("tiny-pinyin");
  */
 class DataSource {
 
+    constructor() {
+    }
+
     /**
      * 预加载数据
      * @returns {Promise<void>}

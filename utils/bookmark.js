@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require('utils/data_path')
 const fs = require('fs')
 
 /**

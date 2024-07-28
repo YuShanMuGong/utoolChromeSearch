@@ -1,7 +1,7 @@
-const pingyin = require('tiny-pinyin')
 
 const {ChromeBookmarks} = require('./datasource/ChromeBookmark')
 const {ChromeHistory} = require('./datasource/ChromeHistory')
+const icon = require('./utils/icon')
 
 /**
  * 数据源Map
@@ -47,7 +47,24 @@ function searchInfo(searchWord, successCallBack, errorCallBack, specifiedSources
                 return Promise.all(searchSource.map(item => item.listItemInfos(searchWord)))
             })
             .then(lists => lists.flatMap(it => it))
-            .then(successCallBack)
+            .then(innerRes => {
+                if (innerRes && innerRes.length > 100) {
+                    innerRes = innerRes.slice(0, 100)
+                }
+                icon.findIcons(process.platform, innerRes.map(item => item.url))
+                    .then(urlWithIconMap => {
+                        innerRes.forEach(item => {
+                            let iconUrl = urlWithIconMap[item.url]
+                            if (iconUrl) {
+                                item.icon = iconUrl
+                            }
+                        })
+                        successCallBack(innerRes)
+                    })
+                    .catch(_ => {
+                        successCallBack(innerRes)
+                    })
+            })
     } catch (error) {
         console.error("searchInfo失败", error)
         errorCallBack(error)
