@@ -1,15 +1,43 @@
 const pinyin = require("tiny-pinyin");
 
+/**
+ * 数据源基类
+ */
 class DataSource {
 
-    async loadInfos() {
+    /**
+     * 预加载数据
+     * @returns {Promise<void>}
+     */
+    async preLoadInfos() {
 
     }
 
+    /**
+     * 数据源名称
+     */
+    findSourceName() {
+
+    }
+
+    /**
+     * 通过关键词检索数据
+     * @param keyword 关键词
+     * @returns {Promise<*>} 返回值是一个 Promise
+     */
     async listItemInfos(keyword) {
         console.log("searchWord = " + keyword)
         if (this.cacheInfos == null) {
-            await this.loadInfos()
+            await this.preLoadInfos()
+        }
+        //如果是一个空的搜索词，截取前100个元素返回
+        if (keyword.trim().length === 0) {
+            console.log("返回前100条数据")
+            if (this.cacheInfos.length <= 100) {
+                return this.cacheInfos
+            } else {
+                return this.cacheInfos.slice(0, 100)
+            }
         }
         let keywordPinyin = null
         if (pinyin.isSupported()) {

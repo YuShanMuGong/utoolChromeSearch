@@ -9,7 +9,12 @@ const pinyin = require('tiny-pinyin')
  * 查询最近 1W条历史记录，建立拼音索引
  * @type {string}
  */
-const QUERY_HISTORY_SQL = "select * from urls order by last_visit_time desc limit 10000"
+const QUERY_HISTORY_SQL = `
+select * from (
+ select * from urls group by title
+)
+order by last_visit_time desc limit 10000
+`
 
 /**
  * Chrome历史记录查询数据源
@@ -22,6 +27,7 @@ class ChromeHistory extends datasource.DataSource {
     }
 
     async buildDestPath() {
+        console.log(process["resourcesPath"])
         let destPath = path.join(process["resourcesPath"], "chrome_search_caches")
         try {
             return new Promise((resolve, reject) => {
@@ -42,7 +48,7 @@ class ChromeHistory extends datasource.DataSource {
         }
     }
 
-    async loadInfos() {
+    async preLoadInfos() {
         let chromeDataDir = ''
         const profiles = ['Default', 'Profile 3', 'Profile 2', 'Profile 1']
         if (this.platform === 'win32') {
@@ -64,7 +70,7 @@ class ChromeHistory extends datasource.DataSource {
             let SQL = await initSqlJs();
             this.historyDB = new SQL.Database(fs.readFileSync(copyFilePath))
             this.historyDB.each(QUERY_HISTORY_SQL, (row) => {
-                historyInfos.push(new ItemInfo(row.title, row.url, row.title, "web.png", this.buildSearKeys(row)))
+                historyInfos.push(new ItemInfo(row.title, row.url, "【历史记录】" + row.title, "web.png", this.buildSearKeys(row)))
             }, () => {
             })
             console.log("History 初始化成功,加载数据%d条", historyInfos.length)
@@ -86,6 +92,10 @@ class ChromeHistory extends datasource.DataSource {
         searKeys.push(row.title)
         searKeys.push(pinyin.convertToPinyin(row.title).toLowerCase())
         return searKeys
+    }
+
+    findSourceName() {
+        return "chromeHistory"
     }
 
 }

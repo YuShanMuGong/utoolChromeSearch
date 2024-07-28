@@ -3,6 +3,11 @@ const pingyin = require('tiny-pinyin')
 const {ChromeBookmarks} = require('./datasource/ChromeBookmark')
 const {ChromeHistory} = require('./datasource/ChromeHistory')
 
+/**
+ * 数据源Map
+ * 类似 {"Bookmarks":ChromeBookmarks,"History":ChromeHistory}
+ * @type {{}}
+ */
 let dataSources = []
 let lastInitTime = null
 
@@ -13,19 +18,40 @@ let lastInitTime = null
 async function enterInit(platform) {
     // 如果dataSource之前没初始化过 或者 初始化已经超过3秒，则重新初始化
     if (dataSources.length <= 0 || (lastInitTime != null && (Math.abs(new Date().getTime() - lastInitTime.getTime()) / 1000)) > 3) {
-        dataSources = []
-        dataSources.push(new ChromeBookmarks(platform))
-        dataSources.push(new ChromeHistory(platform))
-        lastInitTime = new Date()
-        return Promise.all(dataSources.map(item => item.loadInfos()))
+        let newSources = []
+        newSources.push(new ChromeBookmarks(platform))
+        newSources.push(new ChromeHistory(platform))
+        return Promise.all(newSources.map(item => item.preLoadInfos()))
+            .then(_ => {
+                lastInitTime = new Date()
+                dataSources = newSources
+                return newSources
+            })
     } else {
         console.log("已经初始化，直接返回")
+        return Promise.resolve(dataSources)
     }
 }
 
-async function searchKeyword(searchWord) {
-    let resPromise = Promise.all(dataSources.flatMap(item => item.listItemInfos(searchWord)))
-    return (await resPromise).flat(Infinity)
+function searchInfo(searchWord, successCallBack, errorCallBack, specifiedSources) {
+    try {
+        enterInit(process.platform)
+            .then(sources => {
+                let searchSource
+                if (specifiedSources && specifiedSources.length > 0) {
+                    console.log("specifiedSource search " + JSON.stringify(specifiedSources))
+                    searchSource = sources.filter(item => specifiedSources.includes(item.findSourceName()))
+                } else {
+                    searchSource = sources
+                }
+                return Promise.all(searchSource.map(item => item.listItemInfos(searchWord)))
+            })
+            .then(lists => lists.flatMap(it => it))
+            .then(successCallBack)
+    } catch (error) {
+        console.error("searchInfo失败", error)
+        errorCallBack(error)
+    }
 }
 
 window.exports = {
@@ -33,28 +59,32 @@ window.exports = {
         mode: "list", args: {
             // 进入插件应用时调用（可选）
             enter: (action, callbackSetList) => {
-                try {
-                    enterInit(process.platform).then((_) => {
-                        searchKeyword('Java').then(innerRes => callbackSetList(innerRes))
-                        // console.log('history length=' + (response).length)
-                        //
-                        // callbackSetList([{
-                        //     title: "请输入关键字", description: "请输入关键字"
-                        // }])
-                    })
-                } catch (error) {
-                    callbackSetList([{
-                        title: "初始化失败", description: "初始化失败，请重试"
-                    },])
-                }
-                // 如果进入插件应用就要显示列表数据
-            }, // 子输入框内容变化时被调用 可选 (未设置则无搜索)
-            search: (action, searchWord, callbackSetList) => {
-                searchKeyword(searchWord).then(innerRes => {
-                    console.log('innerRes=' + JSON.stringify(innerRes))
+                searchInfo('', function (innerRes) {
+                    console.log("搜索结果" + JSON.stringify(innerRes))
                     callbackSetList(innerRes)
-                })
-            }, // 用户选择列表中某个条目时被调用
+                }, function (_) {
+                    callbackSetList([{
+                        title: "搜索失败", description: "搜索失败，请重试"
+                    },])
+                }, ["chromeHistory"])
+            },
+
+            // 子输入框内容变化时被调用 可选 (未设置则无搜索)
+            search: (action, searchWord, callbackSetList) => {
+                if (searchWord.length === 0) {
+                    return
+                }
+                searchInfo(searchWord, function (innerRes) {
+                    console.log("搜索结果" + JSON.stringify(innerRes))
+                    callbackSetList(innerRes)
+                }, function (_) {
+                    callbackSetList([{
+                        title: "搜索失败", description: "搜索失败，请重试"
+                    },])
+                }, [])
+            },
+
+            // 用户选择列表中某个条目时被调用
             select: (action, itemData, callbackSetList) => {
                 window.utools.hideMainWindow()
                 const url = itemData.url

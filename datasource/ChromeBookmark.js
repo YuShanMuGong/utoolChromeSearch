@@ -11,7 +11,7 @@ class ChromeBookmarks extends datasource.DataSource {
         this.platform = platform
     }
 
-    async loadInfos() {
+    async preLoadInfos() {
         let chromeDataDir = ''
         const profiles = ['Default', 'Profile 3', 'Profile 2', 'Profile 1']
         if (this.platform === 'win32') {
@@ -34,7 +34,7 @@ class ChromeBookmarks extends datasource.DataSource {
                 if (!item || !Array.isArray(item.children)) return
                 item.children.forEach(c => {
                     if (c.type === 'url') {
-                        newBookmarksData.push(new ItemInfo(c.name, c.url, c.name.toLowerCase(), 'web,png', this.buildSearKeys(c)))
+                        newBookmarksData.push(new ItemInfo(c.name, c.url, "【来自书签】" + c.name.toLowerCase(), 'web,png', this.buildSearKeys(c)))
                     } else if (c.type === 'folder') {
                         getUrlData(c)
                     }
@@ -56,6 +56,10 @@ class ChromeBookmarks extends datasource.DataSource {
         searKeys.push(info.name.toLowerCase())
         searKeys.push(pinyin.convertToPinyin(info.name).toLowerCase())
         return searKeys
+    }
+
+    findSourceName() {
+        return "chromeBookmark"
     }
 
 }
